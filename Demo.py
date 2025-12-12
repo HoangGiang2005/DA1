@@ -4,57 +4,49 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import plotly.express as px
 
 
-with open("model/xgb_model.pkl", "rb") as f:    
+with open("model/xgb_model_2.pkl", "rb") as f:    
     model = pickle.load(f)
 
 #Analysis Page
-st.title("Phân tích bệnh đột quỵ")
-data_stroke = pd.read_csv("data/DataStroke_OK.csv")
+st.title("Stroke Prediction Analysis Page")
+data_stroke = pd.read_csv("data/DataStroke_OK2.csv")
+
+
+st.markdown("----")
 
 # ======== Visualization ========
-#Biểu đồ 1: Biểu đồ thể hiển số lượng bị đột quỵ theo giới tính
-# stroke_gender = data_stroke.groupby("gender")["stroke"].mean().sort_values()
-# plt.figure(figsize=(7,5))
-# stroke_gender.plot(kind="bar")
+#Biểu đồ 1:
+st.subheader("BIểu đồ thể hiện mức độ ảnh hưởng của các thuộc tính tới việc dự đoán đột quỵ")
+feature_names = data_stroke.drop(columns=['Unnamed: 0', 'stroke']).columns
+feature_importances = model.feature_importances_
 
-# plt.title("Tỷ lệ đột quỵ theo giới tính", fontsize=14)
-# plt.xlabel("Giới tính")
-# plt.ylabel("Tỷ lệ đột quỵ (%)")
-# plt.xticks(rotation=0)
-# for i, v in enumerate(stroke_gender):
-#     plt.text(i, v + 0.0005, f"{v*100:.2f}%", ha='center', fontsize=10)
-# plt.show()
-# st.pyplot(plt)
+df_imp = pd.DataFrame({
+    "Feature": feature_names,
+    "Importance": feature_importances
+}).sort_values(by="Importance", ascending=True)
 
-# #Biểu đồ 2:
-# st.title("Biểu đồ tỷ lệ đột quỵ theo nhóm tuổi")
-# # Tạo nhóm tuổi
-# bins = [0, 30, 40, 50, 60, 150]
-# labels = ["<30", "30-40", "40-50", "50-60", ">60"]
-# data_stroke["age_group"] = pd.cut(data_stroke["age"], bins=bins, labels=labels, include_lowest=True)
 
-# # Tính tỷ lệ đột quỵ theo nhóm tuổi
-# stroke_by_age = data_stroke.groupby("age_group")["stroke"].mean()
 
-# # Vẽ biểu đồ
-# fig, ax = plt.subplots(figsize=(7,4))
-# stroke_by_age.plot(kind="bar", ax=ax)
+fig, ax = plt.subplots(figsize=(8, 6))
+ax.barh(df_imp["Feature"], df_imp["Importance"])
+ax.grid(axis='x', linestyle='--', alpha=0.7)
+ax.set_xlabel("Mức độ ảnh hưởng")
+ax.set_ylabel("Thuộc tính")
+ax.set_title("Feature Importance của mô hình")
+st.pyplot(fig)
 
-# ax.set_title("Tỷ lệ đột quỵ theo nhóm tuổi")
-# ax.set_xlabel("Nhóm tuổi")
-# ax.set_ylabel("Tỷ lệ đột quỵ (%)")
-# ax.set_xticklabels(labels, rotation=0)
+st.write("Tuổi tác có ảnh hưởng lớn nhất tới việc dự đoán đột quỵ.")
+st.write("Tiếp theo là các yếu tố như loại hình làm việc, khu vực sinh sống,tình trạng hôn nhân.")
+st.write("Các yếu tố như tiền sử bệnh tim, huyết áp cao cũng có ảnh hưởng đáng kể.")
+st.write("Các yếu tố như chỉ số BMI, mức đường huyết, giới tính có ảnh hưởng thấp hơn.")
 
-# # Hiển thị số % trên cột
-# for i, v in enumerate(stroke_by_age):
-#     ax.text(i, v + 0.0005, f"{v*100:.2f}%", ha='center')
 
-# st.pyplot(fig)
-#Biểu đồ 3:
 
-st.title("Phân bố các biến số theo tình trạng đột quỵ")
+#BIểu đồ 2:
+st.subheader("Phân bố các biến số theo tình trạng đột quỵ")
 num_cols = ['age', 'avg_glucose_level', 'bmi']
 bin_cols = ['hypertension', 'heart_disease']
 cat_cols = ['gender', 'residence_type', 'work_type', 'smoking_status']
@@ -74,6 +66,10 @@ for i, col in enumerate(num_cols):
 axes1[0].legend()
 plt.tight_layout(); plt.savefig('stroke_fig_numeric_hist.png', bbox_inches='tight')
 st.pyplot(fig1)
+
+st.write("Nhìn chung, những người bị đột quỵ có xu hướng lớn tuổi hơn.")
+st.write("Mức đường huyết trung bình của nhóm đột quỵ cũng cao hơn so với nhóm không đột quỵ.")
+st.write("Chỉ số BMI của cả hai nhóm không có sự khác biệt rõ ràng.")
 
 
 
@@ -116,6 +112,10 @@ for i, col in enumerate(cat_cols):
 plt.tight_layout(); plt.savefig('stroke_fig_categorical_stacked.png', bbox_inches='tight')
 st.pyplot(fig3)
 
+st.write("Tỷ lệ đột quỵ cao hơn ở những người có tiền sử huyết áp cao và bệnh tim.")
+st.write("Những người sống ở khu vực thành thị (Urban) có tỷ lệ đột quỵ cao hơn so với khu vực nông thôn (Rural).")
+st.write("Những người làm việc trong các công việc chính phủ (Govt_job) và những người tự kinh doanh (Self-employed) có tỷ lệ đột quỵ cao hơn so với những người làm việc trong khu vực tư nhân (Private).")
+st.write("Những người hút thuốc hiện tại (Smokes) và những người từng hút thuốc (Formerly smoked) có tỷ lệ đột quỵ cao hơn so với những người chưa bao giờ hút thuốc (Never smoked).")
 
 
 
